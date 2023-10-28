@@ -5,7 +5,7 @@
 namespace lbvh
 {
 
-template<typename Real>
+template<typename Real, bvhdim mydim = bvhdim::three>
 struct query_overlap
 {
     __device__ __host__
@@ -21,20 +21,20 @@ struct query_overlap
     __device__ __host__
     inline bool operator()(const aabb<Real>& box) noexcept
     {
-        return intersects(box, target);
+        return intersects<mydim>(box, target);
     }
 
     aabb<Real> target;
 };
 
-template<typename Real>
+template<typename Real, bvhdim mydim = bvhdim::three>
 __device__ __host__
-query_overlap<Real> overlaps(const aabb<Real>& region) noexcept
+query_overlap<Real, mydim> overlaps(const aabb<Real>& region) noexcept
 {
-    return query_overlap<Real>(region);
+    return query_overlap<Real, mydim>(region);
 }
 
-template<typename Real>
+template<typename Real, bvhdim mydim = bvhdim::three>
 struct query_nearest
 {
     // float4/double4
@@ -53,25 +53,29 @@ struct query_nearest
     vector_type target;
 };
 
+template<bvhdim mydim = bvhdim::three>
 __device__ __host__
-inline query_nearest<float> nearest(const float4& point) noexcept
+inline query_nearest<float, mydim> nearest(const float4& point) noexcept
 {
-    return query_nearest<float>(point);
+    return query_nearest<float, mydim>(point);
 }
+template<bvhdim mydim = bvhdim::three>
 __device__ __host__
-inline query_nearest<float> nearest(const float3& point) noexcept
+inline query_nearest<float, mydim> nearest(const float3& point) noexcept
 {
-    return query_nearest<float>(make_float4(point.x, point.y, point.z, 0.0f));
+    return query_nearest<float, mydim>(make_float4(point.x, point.y, point.z, 0.0f));
 }
+template<bvhdim mydim = bvhdim::three>
 __device__ __host__
-inline query_nearest<double> nearest(const double4& point) noexcept
+inline query_nearest<double, mydim> nearest(const double4& point) noexcept
 {
-    return query_nearest<double>(point);
+    return query_nearest<double, mydim>(point);
 }
+template<bvhdim mydim = bvhdim::three>
 __device__ __host__
-inline query_nearest<double> nearest(const double3& point) noexcept
+inline query_nearest<double, mydim> nearest(const double3& point) noexcept
 {
-    return query_nearest<double>(make_double4(point.x, point.y, point.z, 0.0));
+    return query_nearest<double, mydim>(make_double4(point.x, point.y, point.z, 0.0));
 }
 
 } // lbvh
