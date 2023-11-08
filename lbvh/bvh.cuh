@@ -17,7 +17,9 @@
 #include <thrust/iterator/constant_iterator.h>
 #include <thrust/iterator/counting_iterator.h>
 #include <thrust/execution_policy.h>
+#include <thrust/unique.h>
 
+#include <type_traits>
 namespace lbvh
 {
 namespace detail
@@ -248,6 +250,8 @@ class bvh
         this->construct();
     }
 
+    // adding one iterator to enable on device iniit
+
     bvh()                      = default;
     ~bvh()                     = default;
     bvh(const bvh&)            = default;
@@ -276,6 +280,16 @@ class bvh
         this->objects_d_ = this->objects_h_;
         this->construct();
         return;
+    }
+
+    template<typename InputIterator>
+    void assign(InputIterator first, size_t n) 
+    {
+      this->objects_d_.resize(n);
+      this->objects_h_.resize(n);
+      thrust::copy(first, first + n, this->objects_d_.begin());
+      this->construct();
+      return;
     }
 
     bvh_device<real_type, object_type> get_device_repr()       noexcept
@@ -317,7 +331,7 @@ class bvh
 
         thrust::transform(this->objects_d_.begin(), this->objects_d_.end(),
                 aabbs_.begin() + num_internal_nodes, aabb_getter_type());
-
+        
         const auto aabb_whole = thrust::reduce(
             aabbs_.begin() + num_internal_nodes, aabbs_.end(), default_aabb,
             [] __device__ (const aabb_type& lhs, const aabb_type& rhs) {
