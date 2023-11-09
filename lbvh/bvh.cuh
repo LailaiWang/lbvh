@@ -227,8 +227,9 @@ using  bvh_device = detail::basic_device_bvh<Real, Object, false>;
 template<typename Real, typename Object>
 using cbvh_device = detail::basic_device_bvh<Real, Object, true>;
 
-template<typename Real, typename Object, typename AABBGetter,
-         typename MortonCodeCalculator = default_morton_code_calculator<Real, Object>>
+template<typename Real, typename Object, typename AABBGetter, bvh_dim dim,
+         typename MortonCodeCalculator = default_morton_code_calculator<Real, Object>
+        >
 class bvh
 {
   public:
@@ -335,7 +336,7 @@ class bvh
         const auto aabb_whole = thrust::reduce(
             aabbs_.begin() + num_internal_nodes, aabbs_.end(), default_aabb,
             [] __device__ (const aabb_type& lhs, const aabb_type& rhs) {
-                return merge(lhs, rhs);
+                return merge<dim>(lhs, rhs);
             });
 
         thrust::device_vector<unsigned int> morton(num_objects);
@@ -443,7 +444,7 @@ class bvh
                     const auto ridx = self.nodes[parent].right_idx;
                     const auto lbox = self.aabbs[lidx];
                     const auto rbox = self.aabbs[ridx];
-                    self.aabbs[parent] = merge(lbox, rbox);
+                    self.aabbs[parent] = merge<dim>(lbox, rbox);
 
                     // look the next parent...
                     parent = self.nodes[parent].parent_idx;

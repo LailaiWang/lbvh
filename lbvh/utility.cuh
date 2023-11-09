@@ -5,7 +5,7 @@
 
 namespace lbvh
 {
-enum class bvhdim {two = 2, three =3};
+enum class bvh_dim {two = 2, three =3};
 
 template<typename T> struct vector_of;
 template<> struct vector_of<float>  {using type = float4;};

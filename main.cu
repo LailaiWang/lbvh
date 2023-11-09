@@ -40,7 +40,7 @@ int main()
         p.z = uni(mt);
     }
 
-    lbvh::bvh<float, float4, aabb_getter> bvh(ps.begin(), ps.end(), true);
+    lbvh::bvh<float, float4, aabb_getter, lbvh::bvh_dim::three> bvh(ps.begin(), ps.end(), true);
 
     const auto bvh_dev = bvh.get_device_repr();
 
@@ -63,7 +63,7 @@ int main()
                 query_box.lower = make_float4(self.x-r, self.y-r, self.z-r, 0);
                 query_box.upper = make_float4(self.x+r, self.y+r, self.z+r, 0);
                 const auto num_found = lbvh::query_device(
-                        bvh_dev, lbvh::overlaps(query_box), buffer, 10);
+                    bvh_dev, lbvh::overlaps<float, lbvh::bvh_dim::three>(query_box), buffer, 10);
 
                 for(unsigned int j=0; j<10; ++j)
                 {
@@ -93,8 +93,9 @@ int main()
         thrust::make_counting_iterator<unsigned int>(N),
         [bvh_dev] __device__ (const unsigned int idx) {
             const auto self = bvh_dev.objects[idx];
-            const auto nest = lbvh::query_device(bvh_dev, lbvh::nearest(self),
-                                                 distance_calculator());
+            const auto nest = lbvh::query_device(bvh_dev, 
+                lbvh::nearest<lbvh::bvh_dim::three>(self),distance_calculator());
+
             assert(nest.first != 0xFFFFFFFF);
             const auto other   = bvh_dev.objects[nest.first];
             // of course, the nearest object is itself.
@@ -122,7 +123,8 @@ int main()
     thrust::for_each(random_points.begin(), random_points.end(),
         [bvh_dev] __device__ (const float4 pos) {
             const auto calc = distance_calculator();
-            const auto nest = lbvh::query_device(bvh_dev, lbvh::nearest(pos), calc);
+            const auto nest = lbvh::query_device(
+              bvh_dev, lbvh::nearest<lbvh::bvh_dim::three>(pos), calc);
             assert(nest.first != 0xFFFFFFFF);
 
             for(unsigned int i=0; i<bvh_dev.num_objects; ++i)
@@ -154,8 +156,7 @@ int main()
                 query_box.upper = make_float4(self.x+r, self.y+r, self.z+r, 0);
 
                 std::vector<std::size_t> buffer;
-                const auto num_found = lbvh::query_host(bvh,
-                        lbvh::overlaps(query_box), std::back_inserter(buffer));
+                const auto num_found = lbvh::query_host(bvh, lbvh::overlaps<float, lbvh::bvh_dim::three>(query_box), std::back_inserter(buffer));
 
                 for(unsigned int jdx : buffer)
                 {
