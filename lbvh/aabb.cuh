@@ -27,6 +27,94 @@ inline bool intersects(const aabb<T>& lhs, const aabb<T>& rhs) noexcept
     return true;
 }
 
+template<typename T, typename Ray>
+__device__ __host__
+inline bool ray_line_intersects() {
+
+}
+
+template<typename T, typename Ray>
+__device__ __host__
+inline bool ray_quad_intersects() {
+
+}
+
+template<typename T, typename Ray> 
+__device__ __host__
+inline bool ray_tri_intersects() {
+
+}
+
+// type Ray has a memer O as origin, a memer D as the direction
+template<typename T, typename Ray, bvh_dim dim>
+__device__ __host__
+inline bool ray_bvh_intersects(const aabb<T>& box, const Ray& ray) noexcept
+{
+    // use slab test to check if the ray intersect with the BVH bounding box
+    if constexpr (dim == bvh_dim::two) {
+        T tx1 = (box.lower.x - ray.O.x) / ray.D.x;
+        T tx2 = (box.upper.x - ray.O.x) / ray.D.x;
+        T tmin = 0;
+        T tmax = 0;
+        if constexpr (std::is_same<T, float>::value) {
+          tmin = ::fminf( tx1, tx2 );
+          tmax = ::fmaxf( tx1, tx2 );
+        } else 
+        if constexpr (std::is_same<T, double>::value) {
+          tmin = ::fmin( tx1, tx2 );
+          tmax = ::fmax( tx1, tx2 );
+        }
+        T ty1 = (box.lower.y - ray.O.y) / ray.D.y;
+        T ty2 = (box.upper.y - ray.O.y) / ray.D.y;
+        if constexpr (std::is_same<T, float>::value) {
+          tmin = ::fmaxf( tmin, fminf( ty1, ty2 ) );
+          tmax = ::fminf( tmax, fmaxf( ty1, ty2 ) );
+        } else 
+        if constexpr (std::is_same<T, double>::value) {
+          tmin = ::fmax( tmin, fmin( ty1, ty2 ) );
+          tmax = ::fmin( tmax, fmax( ty1, ty2 ) );
+        }
+        return tmax >= tmin && tmax > 0;
+    } else 
+    if constexpr (dim == bvh_dim::two) {
+        T tx1 = (box.lower.x - ray.O.x) / ray.D.x;
+        T tx2 = (box.upper.x - ray.O.x) / ray.D.x;
+        T tmin = 0;
+        T tmax = 0;
+        if constexpr (std::is_same<T, float>::value) {
+          tmin = ::fminf( tx1, tx2 );
+          tmax = ::fmaxf( tx1, tx2 );
+        } else 
+        if constexpr (std::is_same<T, double>::value) {
+          tmin = ::fmin( tx1, tx2 );
+          tmax = ::fmax( tx1, tx2 );
+        }
+        T ty1 = (box.lower.y - ray.O.y) / ray.D.y;
+        T ty2 = (box.upper.y - ray.O.y) / ray.D.y;
+        if constexpr (std::is_same<T, float>::value) {
+          tmin = ::fmaxf( tmin, fminf( ty1, ty2 ) );
+          tmax = ::fminf( tmax, fmaxf( ty1, ty2 ) );
+        } else 
+        if constexpr (std::is_same<T, double>::value) {
+          tmin = ::fmax( tmin, fmin( ty1, ty2 ) );
+          tmax = ::fmin( tmax, fmax( ty1, ty2 ) );
+        }
+        T tz1 = (box.lower.z - ray.O.z) / ray.D.z;
+        T tz2 = (box.upper.z - ray.O.z) / ray.D.z;
+        if constexpr (std::is_same<T, float>::value) {
+          tmin = ::fmaxf( tmin, fminf( tz1, tz2 ) );
+          tmax = ::fminf( tmax, fmaxf( tz1, tz2 ) );
+        } else 
+        if constexpr (std::is_same<T, float>::value) {
+          tmin = ::fmax( tmin, fmin( tz1, tz2 ) );
+          tmax = ::fmin( tmax, fmax( tz1, tz2 ) );
+        }
+        return tmax >= tmin && tmax > 0;
+    }
+
+}
+
+
 template<bvh_dim dim>
 __device__ __host__
 inline aabb<double> merge(const aabb<double>& lhs, const aabb<double>& rhs) noexcept

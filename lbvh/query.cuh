@@ -5,12 +5,14 @@
 
 namespace lbvh
 {
-/*
-template<typename Real typename Objects, bool IsConst, typename OutputIterator>
+
+template<typename Real, typename Objects, typename Ray, bool IsConst,
+         bvh_dim dim, typename OutputIterator
+        >
 __device__
 unsigned int query_device(
-    const detail::basic_device_bvh<Real, Objects, IsConst>& bvh
-    const query_intersection<> q, OutputIterator outiter,
+    const detail::basic_device_bvh<Real, Objects, IsConst>& bvh,
+    const query_ray_bvh_intersection<Real, Ray, dim> q, OutputIterator outiter,
     const unsigned int max_buffer_size = 0xffffffff) noexcept 
 { 
     using bvh_type = detail::basic_device_bvh<Real, Objects, IsConst>;
@@ -27,28 +29,27 @@ unsigned int query_device(
         const index_type L_idx = bvh.nodes[node].left_idx;
         const index_type R_idx = bvh.nodes[node].right_idx;
         
-        if(intersects_ray_box(), bvh.aabbs[L_idx]) {
+        if(ray_bvh_intersects<Real, Ray, dim>(bvh.aabbs[L_idx], q.ray_)) {
             const auto obj_idx = bvh.nodes[L_idx].object_idx;
-            if(obj_idx != 0xffffffff) {
+            if(obj_idx != 0xFFFFFFFF) {
                 // this is a leaf node
-                if(intersects_ray_surf, bv) { // check if the ray intersections with the surface
-                    if(num_found < max_buffer_size) {
-                        *outiter++ = obj_idx;
-                    }
+                if(num_found < max_buffer_size) {
+                    *outiter++ = obj_idx;
                 }
+                ++num_found;
             } else {
                 *stack_ptr++ = L_idx;
             }
         }
-        if(intersects_ray(), bvh.aabbs[R_idx]) {
+
+        if(ray_bvh_intersects<Real, Ray, dim>(bvh.aabbs[R_idx], q.ray_)) {
             const auto obj_idx = bvh.nodes[R_idx].object_idx;
             if(obj_idx != 0xffffffff) {
-              // this is a leaf node
-              if(intersects_ray_surf) {
+                // this is a leaf node
                 if(num_found < max_buffer_size) {
-
+                    *outiter++ = obj_idx;
                 }
-              }
+                ++num_found;
             } else {
                 *stack_ptr++ = R_idx;
             }
@@ -56,7 +57,7 @@ unsigned int query_device(
     } while (stack < stack_ptr);
     return num_found;
 }
-*/
+
 // query object indices that potentially overlaps with query aabb.
 //
 // requirements:

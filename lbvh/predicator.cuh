@@ -4,6 +4,29 @@
 
 namespace lbvh
 {
+
+template<typename Real, typename Ray, bvh_dim dim>
+struct query_ray_bvh_intersection {
+    __device__ __host__
+    query_ray_bvh_intersection (const Ray& ray) : ray_{ray} {}
+
+    __device__ __host__ 
+    inline bool operator() (const aabb<Real>& box) noexcept
+    {
+        return ray_bvh_intersects<dim>(box, ray_);
+    }
+    // this stores the ray
+    Ray ray_;
+};
+
+template<typename Real, typename Ray, bvh_dim dim>
+__device__ __host__
+query_ray_bvh_intersection<Real, Ray, dim> ray_bvh_intersection(const Ray& ray) noexcept 
+{
+    return query_ray_bvh_intersection<Real,Ray,dim>(ray);
+}
+
+
 template<typename Real, bvh_dim dim>
 struct query_overlap
 {
