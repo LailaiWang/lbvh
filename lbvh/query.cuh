@@ -2,7 +2,7 @@
 #define LBVH_QUERY_CUH
 #include "predicator.cuh"
 #include "utility.cuh"
-
+#include "geom.cuh"
 namespace lbvh
 {
 
@@ -92,6 +92,8 @@ unsigned int query_device(
             const auto obj_idx = bvh.nodes[L_idx].object_idx;
             if(obj_idx != 0xFFFFFFFF)
             {
+                // now this is a leaf now, let's check
+
                 if(num_found < max_buffer_size)
                 {
                     *outiter++ = obj_idx;

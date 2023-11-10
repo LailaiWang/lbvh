@@ -1,6 +1,7 @@
 #ifndef LBVH_AABB_CUH
 #define LBVH_AABB_CUH
 #include "utility.cuh"
+#include "geom.cuh"
 #include <thrust/swap.h>
 #include <cmath>
 
@@ -15,6 +16,76 @@ struct aabb
     using value_type = T;
 };
 
+template<typename F, typename E>
+struct aabb_getter;
+
+template<typename F>
+struct aabb_getter<F, GEOM::bar_2_t> {
+  __device__ __host__
+  lbvh::aabb<F> operator() (const GEOM::element_t<F, GEOM::bar_2_t> object) const noexcept {
+    lbvh::aabb<F> ret;
+    F xmin{0}, ymin{0}, xmax{0}, ymax{0};
+    if constexpr (std::is_same<F, float>::value) {
+      xmin = ::fminf(object.coords.x, object.coords.z);
+      ymin = ::fminf(object.coords.y, object.coords.w);
+      xmax = ::fmaxf(object.coords.x, object.coords.z);
+      ymax = ::fmaxf(object.coords.y, object.coords.w);
+      ret.upper = make_float4(xmax, ymax, 0, 0);
+      ret.lower = make_float4(xmin, ymin, 0, 0);
+    } else 
+    if constexpr (std::is_same<F, double>::value) {
+      xmin = ::fmin(object.coords.x, object.coords.z);
+      ymin = ::fmin(object.coords.y, object.coords.w);
+      xmax = ::fmax(object.coords.x, object.coords.z);
+      ymax = ::fmax(object.coords.y, object.coords.w);
+      ret.upper = make_double4(xmax, ymax, 0, 0);
+      ret.lower = make_double4(xmin, ymin, 0, 0);
+    }
+    return ret;
+  }
+};
+
+template<typename F>
+struct aabb_getter<F, GEOM::quad_4_t> {
+  __device__ __host__
+  lbvh::aabb<F> operator() (const GEOM::element_t<F, GEOM::quad_4_t> object) const noexcept {
+    lbvh::aabb<F> ret;
+    F xmin{ 1e+20};
+    F ymin{ 1e+20};
+    F zmin{ 1e+20};
+    F xmax{-1e+20};
+    F ymax{-1e+20};
+    F zmax{-1e+20};
+    if constexpr (std::is_same<F, float>::value) {
+      #pragma unroll
+      for(int k=0;k<4;++k) {
+        xmin = ::fminf(xmin, object.coords[k].x);
+        ymin = ::fminf(ymin, object.coords[k].y);
+        zmin = ::fminf(zmin, object.coords[k].z);
+        xmax = ::fmaxf(xmax, object.coords[k].x);
+        ymax = ::fmaxf(ymax, object.coords[k].y);
+        zmax = ::fmaxf(zmax, object.coords[k].z);
+      }
+      ret.upper = make_float4(xmax,ymax,zmax,0);
+      ret.lower = make_float4(xmin,ymin,zmin,0);
+    } else 
+    if constexpr (std::is_same<F, double>::value) {
+      #pragma unroll
+      for(int k=0;k<4;++k) {
+        xmin = ::fmin(xmin, object.coords[k].x);
+        ymin = ::fmin(ymin, object.coords[k].y);
+        zmin = ::fmin(zmin, object.coords[k].z);
+        xmax = ::fmax(xmax, object.coords[k].x);
+        ymax = ::fmax(ymax, object.coords[k].y);
+        zmax = ::fmax(zmax, object.coords[k].z);
+      }
+      ret.upper = make_float4(xmax,ymax,zmax,0);
+      ret.lower = make_float4(xmin,ymin,zmin,0);
+    }
+    return ret;
+  }
+};
+
 template<typename T, bvh_dim dim>
 __device__ __host__
 inline bool intersects(const aabb<T>& lhs, const aabb<T>& rhs) noexcept
@@ -27,21 +98,32 @@ inline bool intersects(const aabb<T>& lhs, const aabb<T>& rhs) noexcept
     return true;
 }
 
-template<typename T, typename Ray>
+template<typename T, typename Ray, typename Object, 
+         std::enable_if_t<std::is_same<typename Object::element_type,GEOM::bar_2_t>::value,bool> = true
+        >
 __device__ __host__
-inline bool ray_line_intersects() {
+inline bool ray_surf_intersects() {
+    if constexpr (std::is_same<T, float>::value) {
+
+    } else 
+    if constexpr (std::is_same<T, double>::value) {
+
+    }
+}
+
+template<typename T, typename Ray, typename Object,
+         std::enable_if_t<std::is_same<typename Object::element_type,GEOM::quad_4_t>::value,bool> = true
+        >
+__device__ __host__
+inline bool ray_surf_intersects() {
 
 }
 
-template<typename T, typename Ray>
+template<typename T, typename Ray, typename Object,
+         std::enable_if_t<std::is_same<typename Object::element_type,GEOM::tri_3_t>::value,bool> = true
+        > 
 __device__ __host__
-inline bool ray_quad_intersects() {
-
-}
-
-template<typename T, typename Ray> 
-__device__ __host__
-inline bool ray_tri_intersects() {
+inline bool ray_surf_intersects() {
 
 }
 
