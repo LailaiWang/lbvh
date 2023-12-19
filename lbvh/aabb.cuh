@@ -98,33 +98,64 @@ inline bool intersects(const aabb<T>& lhs, const aabb<T>& rhs) noexcept
     return true;
 }
 
-template<typename T, typename Ray, typename Object, 
-         std::enable_if_t<std::is_same<typename Object::element_type,GEOM::bar_2_t>::value,bool> = true
+template<typename T, typename Ray, typename Object,
+         std::enable_if_t<std::is_same<typename Object::elem_type, GEOM::bar_2_t>::value, bool> = true
+        >
+__device__ __host__
+inline bool ray_surf_intersects(Object& obj, Ray& ray, T& alpha, T& beta) {
+    using T1 = typename Ray::value_type;
+    using T2 = typename Object::value_type;
+    
+    static_assert(std::is_same<T1,T2>::value, "Float type not same in Ray and Object!");
+    bool ans = false;
+
+    T x0 = obj.coords.x, y0 = obj.coords.y;
+    T x1 = obj.coords.z, y1 = obj.coords.w;
+    // check if parallel first
+    T dx = x1 - x0, dy = y1 - y0;
+    T dox = ray.O.x - x0, doy = ray.O.y - y0;
+    // line 1 = (x0, y0) + alpha * (dx, dy)
+    // line 2 = (O.x, O.y) + alpha * (D.x + D.y)
+    // equation to be solved is 
+    //  |dx  -D.x|  |\alpha| = O.x - x0
+    //  |dy  -D.y|  |\beta | = O.y - y0
+    //  inverse of the matrix is 
+    //  1/J | -D.y D.x|
+    //      | -dy  dx |
+    T J = - dx * ray.D.y + dy * ray.D.x;
+    if (J == 0.0) {
+      return false;
+    }
+    alpha = (-ray.D.y * dox + ray.D.x * doy)/J;
+    beta  = (-dy * dox + dx * doy )/J;
+    if (alpha>=0.0 && alpha <= 1.0) {
+      ans = true;
+    }
+    return ans;
+}
+
+template<typename T, typename Object, typename Ray,
+         std::enable_if_t<std::is_same<typename Object::elem_type,GEOM::quad_4_t>::value,bool> = true
         >
 __device__ __host__
 inline bool ray_surf_intersects() {
+    bool ans = false;
+    return ans;
+}
+
+template<typename T, typename Ray, typename Object,
+         std::enable_if_t<std::is_same<typename Object::elem_type,GEOM::tri_3_t>::value,bool> = true
+        > 
+__device__ __host__
+inline bool ray_surf_intersects() {
+    bool ans = false;
     if constexpr (std::is_same<T, float>::value) {
 
     } else 
     if constexpr (std::is_same<T, double>::value) {
 
     }
-}
-
-template<typename T, typename Ray, typename Object,
-         std::enable_if_t<std::is_same<typename Object::element_type,GEOM::quad_4_t>::value,bool> = true
-        >
-__device__ __host__
-inline bool ray_surf_intersects() {
-
-}
-
-template<typename T, typename Ray, typename Object,
-         std::enable_if_t<std::is_same<typename Object::element_type,GEOM::tri_3_t>::value,bool> = true
-        > 
-__device__ __host__
-inline bool ray_surf_intersects() {
-
+    return ans;
 }
 
 // type Ray has a memer O as origin, a memer D as the direction

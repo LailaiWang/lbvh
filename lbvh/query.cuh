@@ -32,11 +32,16 @@ unsigned int query_device(
         if(ray_bvh_intersects<Real, Ray, dim>(bvh.aabbs[L_idx], q.ray_)) {
             const auto obj_idx = bvh.nodes[L_idx].object_idx;
             if(obj_idx != 0xFFFFFFFF) {
-                // this is a leaf node
-                if(num_found < max_buffer_size) {
-                    *outiter++ = obj_idx;
+                // this is a leaf node, use the object and ray to check
+                Real alpha{0}, beta{0};
+                auto isurf = ray_surf_intersects<Real>(bvh.objects[obj_idx], q.ray_, alpha, beta);
+                
+                if (isurf) {
+                    if(num_found < max_buffer_size) {
+                        *outiter++ = obj_idx;
+                    }
+                    ++num_found;
                 }
-                ++num_found;
             } else {
                 *stack_ptr++ = L_idx;
             }
@@ -46,10 +51,15 @@ unsigned int query_device(
             const auto obj_idx = bvh.nodes[R_idx].object_idx;
             if(obj_idx != 0xffffffff) {
                 // this is a leaf node
-                if(num_found < max_buffer_size) {
-                    *outiter++ = obj_idx;
+                Real alpha{0}, beta{0};
+                auto isurf = ray_surf_intersects<Real>(bvh.objects[obj_idx], q.ray_, alpha, beta);
+                
+                if (isurf) {
+                    if(num_found < max_buffer_size) {
+                        *outiter++ = obj_idx;
+                    }
+                    ++num_found;
                 }
-                ++num_found;
             } else {
                 *stack_ptr++ = R_idx;
             }
