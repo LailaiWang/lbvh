@@ -114,6 +114,7 @@ inline bool ray_surf_intersects(Object& obj, Ray& ray, T& alpha, T& beta) {
     // check if parallel first
     T dx = x1 - x0, dy = y1 - y0;
     T dox = ray.O.x - x0, doy = ray.O.y - y0;
+    T rDx = ray.D.x, rDy = ray.D.y;
     // line 1 = (x0, y0) + alpha * (dx, dy)
     // line 2 = (O.x, O.y) + alpha * (D.x + D.y)
     // equation to be solved is 
@@ -122,11 +123,11 @@ inline bool ray_surf_intersects(Object& obj, Ray& ray, T& alpha, T& beta) {
     //  inverse of the matrix is 
     //  1/J | -D.y D.x|
     //      | -dy  dx |
-    T J = - dx * ray.D.y + dy * ray.D.x;
+    T J = - dx * rDy + dy * rDx;
     if (J == 0.0) {
       return false;
     }
-    alpha = (-ray.D.y * dox + ray.D.x * doy)/J;
+    alpha = (-rDy * dox + rDx * doy)/J;
     beta  = (-dy * dox + dx * doy )/J;
     if (alpha>=0.0 && alpha <= 1.0) {
       ans = true;

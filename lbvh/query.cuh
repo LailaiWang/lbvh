@@ -7,12 +7,13 @@ namespace lbvh
 {
 
 template<typename Real, typename Objects, typename Ray, bool IsConst,
-         bvh_dim dim, typename OutputIterator
+         bvh_dim dim, typename OutputIterator, typename OutputIteratorF
         >
 __device__
 unsigned int query_device(
     const detail::basic_device_bvh<Real, Objects, IsConst>& bvh,
-    const query_ray_bvh_intersection<Real, Ray, dim> q, OutputIterator outiter,
+    const query_ray_bvh_intersection<Real, Ray, dim> q,
+    OutputIterator outiter, OutputIteratorF outiterf,
     const unsigned int max_buffer_size = 0xffffffff) noexcept 
 { 
     using bvh_type = detail::basic_device_bvh<Real, Objects, IsConst>;
@@ -39,6 +40,7 @@ unsigned int query_device(
                 if (isurf) {
                     if(num_found < max_buffer_size) {
                         *outiter++ = obj_idx;
+                        *outiterf++ = beta;
                     }
                     ++num_found;
                 }
@@ -57,6 +59,7 @@ unsigned int query_device(
                 if (isurf) {
                     if(num_found < max_buffer_size) {
                         *outiter++ = obj_idx;
+                        *outiterf++ = beta;
                     }
                     ++num_found;
                 }
